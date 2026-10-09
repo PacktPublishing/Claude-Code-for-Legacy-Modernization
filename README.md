@@ -10,12 +10,16 @@ All records and identities are synthetic. Do not introduce production data, cred
 
 ## Start here
 
-Clone the published starting state onto a branch you own. The `lab/00-start-v2` tag is the maintained reference point; do not move or rewrite it.
+Clone the published starting state onto a branch you own. The immutable `lab/00-start-v3` tag is the recommended hardened reference point; do not move or rewrite it.
+
+### Starter versions and printed chapter commands
+
+`lab/00-start-v2` remains unchanged at `9cec365696842af8fbbaf2c4a1fbec3cdac0dc9f` for reproducing earlier printed instructions (50 tests; 38 policy tests). Current `main` and `lab/00-start-v3` include schema-null rejection, malformed hook-envelope handling, and an exact differential assertion (52 tests; 40 policy tests). For a new book workspace, substitute `lab/00-start-v3` wherever a chapter selects `lab/00-start-v2`. Both versions retain the same intentional rounding gap, fixtures, and chapter progression; neither is a solved Chapter 17 state. Existing reader branches should review and apply the scoped hardening changes rather than reset their exercise work. The old tag does not acquire fixes when `main` advances.
 
 ```bash
 git clone https://github.com/PacktPublishing/Claude-Code-for-Legacy-Modernization.git
 cd Claude-Code-for-Legacy-Modernization
-git switch -c exercises/rounding-fix lab/00-start-v2
+git switch -c exercises/rounding-fix lab/00-start-v3
 python3 --version
 make test
 make policy
@@ -34,8 +38,8 @@ That difference is the first exercise, not an installation failure. Creating an 
 To inspect the tag object and the exact commit selected in your clone:
 
 ```bash
-git cat-file -t lab/00-start-v2
-git rev-parse 'lab/00-start-v2^{commit}'
+git cat-file -t lab/00-start-v3
+git rev-parse 'lab/00-start-v3^{commit}'
 ```
 
 ## What the repository supplies
@@ -48,7 +52,7 @@ git rev-parse 'lab/00-start-v2^{commit}'
 - local schemas and fail-closed policy checks;
 - full JSON and YAML listings referenced by the book, with checksums and provenance metadata.
 
-The repository supplies the **starting state**, tagged `lab/00-start-v2`. It does not claim that later chapter states have already been completed or approved. As you work through the book, create later `lab/NN-*` tags only in your own fork or clone, and only after the named evidence and human review gate have passed. Reader-created tags are not official releases from this repository.
+The repository supplies the **starting state**, tagged `lab/00-start-v3`. It does not claim that later chapter states have already been completed or approved. As you work through the book, create later `lab/NN-*` tags only in your own fork or clone, and only after the named evidence and human review gate have passed. Reader-created tags are not official releases from this repository.
 
 ## Prerequisites
 
@@ -69,7 +73,7 @@ make compatibility-live
 
 The live check invokes only `claude --version`; it does not submit a model task. The wrappers fail closed when a different version is installed. Review `compatibility/README.md` and the book's Appendix A before adapting the pin.
 
-## Expected command results at `lab/00-start-v2`
+## Expected command results at `lab/00-start-v3`
 
 | Command | Expected result | Meaning |
 |---|---|---|
@@ -97,7 +101,7 @@ The steps below belong only to `exercises/rounding-fix`, a standalone shortcut. 
 
 ## Cumulative book progression
 
-Start a separate clean branch or checkout at `lab/00-start-v2` (for example `exercises/book-progression`), not at the solved quickstart branch. Complete Chapters 1–26 in order, preserving the gap through Chapter 16 and recording the Chapter 17 decision before correcting it. Later checks use the accepted cumulative candidate; the original mismatch remains useful negative-test evidence, not a reason to undo the correction. Chapter end tags require the named evidence and human review, not the quickstart's passing scripts.
+Start a separate clean branch or checkout at `lab/00-start-v3` (for example `exercises/book-progression`), not at the solved quickstart branch. Complete Chapters 1–26 in order, preserving the gap through Chapter 16 and recording the Chapter 17 decision before correcting it. Later checks use the accepted cumulative candidate; the original mismatch remains useful negative-test evidence, not a reason to undo the correction. Chapter end tags require the named evidence and human review, not the quickstart's passing scripts.
 
 Run chapter commands from this repository root. `scripts/verify_artifact.py` is a **presence/token check**, not schema or semantic validation: it checks non-empty files and requested literal tokens (or a directory containing a non-empty file). Behavioural tests, format/schema checks where provided, and named human decisions are separate gates. Missing evidence, failed required checks or absent approval blocks progression.
 

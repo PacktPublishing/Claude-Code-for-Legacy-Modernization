@@ -63,6 +63,10 @@ def main() -> int:
         print(f"invalid hook input: {exc}", file=sys.stderr)
         return 2
 
+    if not isinstance(event, dict):
+        print("invalid hook input: event must be an object", file=sys.stderr)
+        return 2
+
     tool_name = str(event.get("tool_name", ""))
     tool_input = event.get("tool_input", {})
     if not isinstance(tool_input, dict):

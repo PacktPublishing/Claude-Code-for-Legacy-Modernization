@@ -21,7 +21,7 @@ compatibility-live: check-environment
 	$(PYTHON) scripts/claude_compat.py live-check
 
 policy: schemas book-assets compatibility
-	$(PYTHON) -m unittest tests.test_protect_files tests.test_settings_policy tests.test_validate_artifacts tests.test_book_assets tests.test_claude_compat -v
+	$(PYTHON) -m unittest tests.test_protect_files tests.test_settings_policy tests.test_validate_artifacts tests.test_book_assets tests.test_claude_compat tests.test_independent_review -v
 
 test-legacy: check-environment
 	$(PYTHON) -m unittest tests.test_legacy -v

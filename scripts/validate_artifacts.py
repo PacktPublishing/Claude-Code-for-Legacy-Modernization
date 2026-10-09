@@ -78,7 +78,7 @@ def validate_schema_dialect(schema: Any, location: str = "$schema") -> None:
     if unsupported:
         raise ValidationError(f"{location}: unsupported schema keywords {unsupported}")
     expected = schema.get("type")
-    if expected is not None:
+    if "type" in schema:
         choices = expected if isinstance(expected, list) else [expected]
         if (
             not choices
@@ -99,10 +99,10 @@ def validate_schema_dialect(schema: Any, location: str = "$schema") -> None:
     for key, child in properties.items():
         validate_schema_dialect(child, f"{location}.properties.{key}")
     items = schema.get("items")
-    if items is not None:
+    if "items" in schema:
         validate_schema_dialect(items, f"{location}.items")
     additional = schema.get("additionalProperties")
-    if additional is not None and not isinstance(additional, bool):
+    if "additionalProperties" in schema and not isinstance(additional, bool):
         raise ValidationError(
             f"{location}.additionalProperties: only boolean values are supported"
         )
