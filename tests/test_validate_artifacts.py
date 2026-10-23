@@ -43,7 +43,7 @@ class ValidateArtifactsTests(unittest.TestCase):
 
     def test_unsupported_schema_keyword_fails_closed(self):
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
-            validate("", {"type": "string", "minLength": 1})
+            validate("", {"type": "string", "maxLength": 1})
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
             validate(-1, {"type": "integer", "minimum": 0})
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):

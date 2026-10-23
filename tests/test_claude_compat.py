@@ -179,7 +179,7 @@ class ClaudeCompatibilityTests(unittest.TestCase):
             schema = root / "return.schema.json"
             prompt.write_text("Bounded task", encoding="utf-8")
             schema.write_text(
-                '{"type":"object","properties":{"status":{"type":"string","minLength":1}}}',
+                '{"type":"object","properties":{"status":{"type":"string","maxLength":1}}}',
                 encoding="utf-8",
             )
             stderr = io.StringIO()

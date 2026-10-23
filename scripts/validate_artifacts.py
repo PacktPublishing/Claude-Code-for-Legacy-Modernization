@@ -11,6 +11,7 @@ import json
 import math
 import re
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -22,14 +23,44 @@ SUPPORTED_SCHEMA_KEYS = {
     "additionalProperties",
     "const",
     "enum",
+    "format",
     "items",
     "minItems",
+    "minLength",
     "pattern",
     "properties",
     "required",
     "type",
 }
 SUPPORTED_TYPES = {"object", "array", "string", "boolean", "null", "integer", "number"}
+DATE_TIME = re.compile(
+    r"([0-9]{4})-([0-9]{2})-([0-9]{2})[Tt]"
+    r"([0-9]{2}):([0-9]{2}):([0-9]{2})(?:\.[0-9]+)?"
+    r"(?:[Zz]|[+-]([0-9]{2}):([0-9]{2}))"
+)
+
+
+def _valid_date_time(value: str) -> bool:
+    """Bounded RFC 3339 profile: years 0001–9999, seconds 00–59.
+
+    Fractional seconds accept any positive number of ASCII digits; no rounding
+    or microsecond conversion occurs. Leap seconds are deliberately rejected
+    (no leap-second table). Offsets are mandatory, 00:00 through 23:59;
+    -00:00 retains RFC 3339's unknown-local-offset meaning. Lowercase t/z work.
+    This is validation, not instant conversion or offset normalization.
+    """
+    match = DATE_TIME.fullmatch(value)
+    if match is None:
+        return False
+    year, month, day, hour, minute, second, offset_hour, offset_minute = match.groups()
+    try:
+        date(int(year), int(month), int(day))
+    except ValueError:
+        return False
+    return (
+        int(hour) <= 23 and int(minute) <= 59 and int(second) <= 59
+        and (offset_hour is None or (int(offset_hour) <= 23 and int(offset_minute) <= 59))
+    )
 
 
 class ValidationError(ValueError):
@@ -119,6 +150,12 @@ def validate_schema_dialect(schema: Any, location: str = "$schema") -> None:
         or schema["minItems"] < 0
     ):
         raise ValidationError(f"{location}.minItems: expected a non-negative integer")
+    if "minLength" in schema and (
+        type(schema["minLength"]) is not int or schema["minLength"] < 0
+    ):
+        raise ValidationError(f"{location}.minLength: expected a non-negative integer")
+    if "format" in schema and schema["format"] != "date-time":
+        raise ValidationError(f"{location}.format: unsupported format; only date-time is supported")
     if "pattern" in schema:
         try:
             re.compile(schema["pattern"])
@@ -160,6 +197,12 @@ def _validate_value(value: Any, schema: dict[str, Any], location: str) -> None:
         _json_equal(value, candidate) for candidate in schema["enum"]
     ):
         raise ValidationError(f"{location}: value is not in enum")
+    if isinstance(value, str):
+        # Python len(str) counts Unicode code points, not UTF-8 bytes/graphemes.
+        if len(value) < schema.get("minLength", 0):
+            raise ValidationError(f"{location}: string too short (minLength {schema['minLength']})")
+        if schema.get("format") == "date-time" and not _valid_date_time(value):
+            raise ValidationError(f"{location}: invalid date-time (RFC 3339 profile; no leap seconds)")
     if isinstance(value, str) and "pattern" in schema and not re.search(schema["pattern"], value):
         raise ValidationError(f"{location}: does not match {schema['pattern']!r}")
     if isinstance(value, list):

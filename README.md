@@ -8,13 +8,15 @@ Companion exercises for *Claude Code for Legacy Modernization*. This repository 
 
 All records and identities are synthetic. Do not introduce production data, credentials, proprietary source code, customer information, or private prompts and logs.
 
+The [v11 publisher delivery](https://github.com/PacktPublishing/Claude-Code-for-Legacy-Modernization-book-development/tree/main/delivery/2026-10-23-v11) accompanies a bounded validator update on `main`: `minLength` counts Unicode code points, and `format: date-time` checks a documented RFC 3339 profile with mandatory offsets, years 0001–9999, and no leap seconds. Unsupported keywords and formats still fail closed. The starter tags and intentional rounding gap remain unchanged; the tagged test counts below describe those earlier states.
+
 ## Start here
 
 Clone the published starting state onto a branch you own. The immutable `lab/00-start-v3` tag is the recommended hardened reference point; do not move or rewrite it.
 
 ### Starter versions and printed chapter commands
 
-`lab/00-start-v2` remains unchanged at `9cec365696842af8fbbaf2c4a1fbec3cdac0dc9f` for reproducing earlier printed instructions (50 tests; 38 policy tests). Current `main` and `lab/00-start-v3` include schema-null rejection, malformed hook-envelope handling, and an exact differential assertion (52 tests; 40 policy tests). For a new book workspace, substitute `lab/00-start-v3` wherever a chapter selects `lab/00-start-v2`. Both versions retain the same intentional rounding gap, fixtures, and chapter progression; neither is a solved Chapter 17 state. Existing reader branches should review and apply the scoped hardening changes rather than reset their exercise work. The old tag does not acquire fixes when `main` advances.
+`lab/00-start-v2` remains unchanged at `9cec365696842af8fbbaf2c4a1fbec3cdac0dc9f` for reproducing earlier printed instructions (50 tests; 38 policy tests). `lab/00-start-v3` includes schema-null rejection, malformed hook-envelope handling, and an exact differential assertion (52 tests; 40 policy tests). Current `main` adds the v11 validator update (60 tests). For a new book workspace, substitute `lab/00-start-v3` wherever a chapter selects `lab/00-start-v2`. Both versions retain the same intentional rounding gap, fixtures, and chapter progression; neither is a solved Chapter 17 state. Existing reader branches should review and apply the scoped hardening changes rather than reset their exercise work. The old tag does not acquire fixes when `main` advances.
 
 ```bash
 git clone https://github.com/PacktPublishing/Claude-Code-for-Legacy-Modernization.git
