@@ -54,6 +54,10 @@ class ProtectFilesHookTest(unittest.TestCase):
     def test_denies_direct_protected_path(self) -> None:
         self.assert_denied(self.invoke("Edit", {"file_path": "legacy_app/settlement.py"}))
 
+    def test_denies_human_decision_edits(self) -> None:
+        for tool in ("Write", "Edit"):
+            self.assert_denied(self.invoke(tool, {"file_path": "docs/decisions/0001-rounding-mismatch.md"}))
+
     def test_denies_absolute_protected_path(self) -> None:
         target = ROOT / "fixtures/golden-master/settlements.expected.csv"
         self.assert_denied(self.invoke("Write", {"file_path": str(target)}))

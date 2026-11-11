@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -23,7 +24,7 @@ def parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         metavar="TOKEN",
-        help="literal field name or token required in file content; repeatable",
+        help="complete field label, quoted key or table/CSV cell; repeatable",
     )
     return result
 
@@ -69,7 +70,14 @@ def verify(path: Path, required: list[str], root: Path = ROOT) -> tuple[int, str
     if not data:
         return EXIT_EMPTY, f"EMPTY FILE: {path}"
     text = data.decode("utf-8", errors="replace")
-    missing = [token for token in required if token not in text]
+    if not text.strip():
+        return EXIT_EMPTY, f"WHITESPACE-ONLY FILE: {path}"
+    # Match a complete label/key/cell, not a word inside another field name.
+    # Supports bare or Markdown-labelled lines, quoted JSON keys, table/CSV cells.
+    missing = [token for token in required if not re.search(
+        r"(?:^\s*(?:#{1,6}\s+|[-*]\s+)?(?:\*\*|`)?|[\"'|,]\s*)"
+        + re.escape(token)
+        + r"(?=(?:\*\*|`)?\s*(?::|[\"'|,]|$))", text, re.MULTILINE)]
     if missing:
         return EXIT_TOKEN, f"MISSING TOKENS: {', '.join(missing)}"
     return EXIT_OK, f"ARTIFACT PASS: {path} ({len(data)} bytes)"
@@ -77,8 +85,8 @@ def verify(path: Path, required: list[str], root: Path = ROOT) -> tuple[int, str
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
-    if any(not token for token in args.require):
-        parser().error("--require tokens must not be empty")
+    if any(not token.strip() for token in args.require):
+        parser().error("--require tokens must not be empty or whitespace-only")
     code, message = verify(args.path, args.require)
     stream = sys.stdout if code == EXIT_OK else sys.stderr
     print(message, file=stream)

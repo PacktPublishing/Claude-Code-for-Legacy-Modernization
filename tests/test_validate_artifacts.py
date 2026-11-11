@@ -14,6 +14,11 @@ from scripts.validate_artifacts import (
 
 
 class ValidateArtifactsTests(unittest.TestCase):
+    def test_explicit_null_schema_keywords_rejected(self):
+        for key in ("type", "items", "additionalProperties"):
+            with self.subTest(key=key), self.assertRaises(ValidationError):
+                validate_schema_dialect({key: None})
+
     def test_registered_artifacts_validate(self):
         self.assertEqual((2, 1), validate_registered())
 
@@ -45,7 +50,7 @@ class ValidateArtifactsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
             validate("", {"type": "string", "maxLength": 1})
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
-            validate(-1, {"type": "integer", "minimum": 0})
+            validate(-1, {"type": "integer", "exclusiveMinimum": 0})
         with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
             validate([1, 1], {"type": "array", "uniqueItems": True})
 

@@ -26,6 +26,8 @@ SUPPORTED_SCHEMA_KEYS = {
     "format",
     "items",
     "minItems",
+    "maxItems",
+    "minimum",
     "minLength",
     "pattern",
     "properties",
@@ -71,13 +73,22 @@ def _reject_non_finite(value: str) -> None:
     raise ValidationError(f"non-finite JSON number is not allowed: {value}")
 
 
+def unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValidationError(f"duplicate JSON member: {key}")
+        result[key] = value
+    return result
+
+
 def load_data(path: Path, format_name: str) -> Any:
     # JSON is a strict YAML 1.2 subset. This keeps the lab dependency-free and
     # rejects broader YAML instead of pretending a partial parser is complete.
     if format_name not in {"json", "yaml-json-subset"}:
         raise ValidationError(f"unsupported format: {format_name}")
     try:
-        return json.loads(path.read_text(encoding="utf-8"), parse_constant=_reject_non_finite)
+        return json.loads(path.read_text(encoding="utf-8"), parse_constant=_reject_non_finite, object_pairs_hook=unique_json_object)
     except (OSError, json.JSONDecodeError, UnicodeError) as exc:
         label = "JSON-compatible YAML" if format_name == "yaml-json-subset" else "JSON"
         raise ValidationError(f"{path}: invalid {label}: {exc}") from exc
@@ -150,12 +161,18 @@ def validate_schema_dialect(schema: Any, location: str = "$schema") -> None:
         or schema["minItems"] < 0
     ):
         raise ValidationError(f"{location}.minItems: expected a non-negative integer")
+    if "maxItems" in schema and (
+        type(schema["maxItems"]) is not int or schema["maxItems"] < 0
+    ):
+        raise ValidationError(f"{location}.maxItems: expected a non-negative integer")
     if "minLength" in schema and (
         type(schema["minLength"]) is not int or schema["minLength"] < 0
     ):
         raise ValidationError(f"{location}.minLength: expected a non-negative integer")
-    if "format" in schema and schema["format"] != "date-time":
-        raise ValidationError(f"{location}.format: unsupported format; only date-time is supported")
+    if "minimum" in schema and (type(schema["minimum"]) not in (int, float) or not math.isfinite(schema["minimum"])):
+        raise ValidationError(f"{location}.minimum: expected finite number")
+    if "format" in schema and schema["format"] not in ("date-time", "date"):
+        raise ValidationError(f"{location}.format: unsupported format")
     if "pattern" in schema:
         try:
             re.compile(schema["pattern"])
@@ -197,7 +214,16 @@ def _validate_value(value: Any, schema: dict[str, Any], location: str) -> None:
         _json_equal(value, candidate) for candidate in schema["enum"]
     ):
         raise ValidationError(f"{location}: value is not in enum")
+    if type(value) in (int, float) and "minimum" in schema and value < schema["minimum"]:
+        raise ValidationError(f"{location}: below minimum")
     if isinstance(value, str):
+        if schema.get("format") == "date":
+            try:
+                if not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value):
+                    raise ValueError("date shape")
+                date.fromisoformat(value)
+            except ValueError as exc:
+                raise ValidationError(f"{location}: invalid date") from exc
         # Python len(str) counts Unicode code points, not UTF-8 bytes/graphemes.
         if len(value) < schema.get("minLength", 0):
             raise ValidationError(f"{location}: string too short (minLength {schema['minLength']})")
@@ -208,6 +234,8 @@ def _validate_value(value: Any, schema: dict[str, Any], location: str) -> None:
     if isinstance(value, list):
         if len(value) < schema.get("minItems", 0):
             raise ValidationError(f"{location}: too few items")
+        if "maxItems" in schema and len(value) > schema["maxItems"]:
+            raise ValidationError(f"{location}: too many items")
         item_schema = schema.get("items")
         if isinstance(item_schema, dict):
             for index, item in enumerate(value):
@@ -278,6 +306,12 @@ def validate_registered(root: Path = ROOT, registry_path: Path = REGISTRY) -> tu
 
 def main() -> int:
     try:
+        if len(sys.argv) == 4:
+            validate(load_data(Path(sys.argv[1]), sys.argv[3]), load_data(Path(sys.argv[2]), "json"))
+            print("SCHEMA PASS: shape only; not provenance or authorization")
+            return 0
+        if len(sys.argv) != 1:
+            raise ValidationError("usage: validate_artifacts.py [ARTIFACT SCHEMA json|yaml-json-subset]")
         checked, skipped = validate_registered()
     except (ValidationError, KeyError, TypeError) as exc:
         print(f"SCHEMA FAIL: {exc}", file=sys.stderr)

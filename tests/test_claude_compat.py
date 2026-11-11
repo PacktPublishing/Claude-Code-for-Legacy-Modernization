@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
@@ -22,6 +23,16 @@ from scripts.validate_artifacts import ValidationError
 def run(*args: str, cwd: Path) -> str:
     result = subprocess.run(args, cwd=cwd, text=True, capture_output=True, check=True)
     return result.stdout.strip()
+
+
+def fixture_repo(repo: Path) -> None:
+    # The lab can be nested in the author repository or exported standalone.
+    shutil.copytree(ROOT, repo, ignore=shutil.ignore_patterns(".git", "__pycache__", "runs"))
+    run("git", "init", "-q", cwd=repo)
+    run("git", "config", "user.email", "lab@example.invalid", cwd=repo)
+    run("git", "config", "user.name", "Lab test", cwd=repo)
+    run("git", "add", ".", cwd=repo)
+    run("git", "commit", "-qm", "test fixture", cwd=repo)
 
 
 def make_fake(root: Path) -> tuple[Path, Path]:
@@ -91,6 +102,7 @@ class ClaudeCompatibilityTests(unittest.TestCase):
                 result = main([
                     "structured-task", "--claude", str(fake), "--cwd", str(root),
                     "--prompt", str(prompt), "--schema", str(schema),
+                    "--run-dir", str(root / "run-evidence"),
                 ])
             self.assertEqual(0, result)
             self.assertEqual({"status": "ok"}, json.loads(output.getvalue()))
@@ -117,7 +129,7 @@ class ClaudeCompatibilityTests(unittest.TestCase):
         with TemporaryDirectory() as root_name:
             root = Path(root_name)
             repo = root / "repo"
-            run("git", "clone", "-q", str(ROOT), str(repo), cwd=root)
+            fixture_repo(repo)
             revision = run("git", "rev-parse", "HEAD", cwd=repo)
             fake, log = make_fake(root)
             with patch.dict(os.environ, {"FAKE_CLAUDE_LOG": str(log)}, clear=False):
@@ -135,7 +147,7 @@ class ClaudeCompatibilityTests(unittest.TestCase):
         with TemporaryDirectory() as root_name:
             root = Path(root_name)
             repo = root / "repo"
-            run("git", "clone", "-q", str(ROOT), str(repo), cwd=root)
+            fixture_repo(repo)
             run("git", "config", "user.email", "lab@example.invalid", cwd=repo)
             run("git", "config", "user.name", "Lab test", cwd=repo)
             old = run("git", "rev-parse", "HEAD", cwd=repo)

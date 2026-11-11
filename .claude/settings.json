@@ -5,7 +5,6 @@
     "allow": [
       "Bash(make test)",
       "Bash(make test-legacy)",
-      "Bash(make baseline)",
       "Bash(make characterize)",
       "Bash(make compare)",
       "Bash(make verify)",
@@ -26,7 +25,8 @@
       "Read(./**/.env)",
       "Read(./**/.env.*)",
       "Edit(legacy_app/**)",
-      "Edit(fixtures/golden-master/**)"
+      "Edit(fixtures/golden-master/**)",
+      "Edit(docs/decisions/0001-rounding-mismatch.md)"
     ]
   },
   "sandbox": {
@@ -38,7 +38,8 @@
     "filesystem": {
       "denyWrite": [
         "./legacy_app/",
-        "./fixtures/golden-master/"
+        "./fixtures/golden-master/",
+        "./docs/decisions/0001-rounding-mismatch.md"
       ]
     }
   },
