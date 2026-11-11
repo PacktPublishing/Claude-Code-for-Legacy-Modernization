@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,7 @@ try:
         ROOT,
         ValidationError,
         load_data,
+        unique_json_object,
         validate,
         validate_schema_dialect,
     )
@@ -24,6 +26,7 @@ except ModuleNotFoundError:  # Direct execution adds scripts/, not its parent, t
         ROOT,
         ValidationError,
         load_data,
+        unique_json_object,
         validate,
         validate_schema_dialect,
     )
@@ -130,7 +133,7 @@ def extract_structured_output(stdout: str, schema: dict[str, Any]) -> Any:
         raise ValidationError(f"Claude CLI returned non-finite JSON number: {value}")
 
     try:
-        envelope = json.loads(stdout, parse_constant=reject_constant)
+        envelope = json.loads(stdout, parse_constant=reject_constant, object_pairs_hook=unique_json_object)
     except json.JSONDecodeError as exc:
         raise ValidationError(f"Claude CLI returned invalid JSON: {exc.msg}") from exc
     if not isinstance(envelope, dict) or "structured_output" not in envelope:
@@ -168,6 +171,8 @@ def parser() -> argparse.ArgumentParser:
     structured = sub.add_parser(
         "structured-task", help="run a headless task and emit only validated structured_output"
     )
+    structured.add_argument("--run-dir", type=Path, help="new evidence directory inside lab; never overwritten")
+    structured.add_argument("--expected-model", help="reject missing, different or additional envelope model identities")
     structured.add_argument("--prompt", type=Path, required=True)
     structured.add_argument("--schema", type=Path, default=RETURN_SCHEMA)
     structured.add_argument("--cwd", type=Path, default=Path.cwd())
@@ -225,17 +230,60 @@ def main(argv: list[str] | None = None) -> int:
         if schema.get("type") != "object":
             raise ValidationError("return schema must describe an object")
         command = build_structured_command(manifest, executable, prompt, schema_path)
+        if args.run_dir:
+            parent = require_within_lab(args.run_dir.parent, "run directory parent")
+            run_dir = parent / args.run_dir.name
+            run_dir.mkdir(exist_ok=False)
+        else:
+            runs = ROOT / "evidence/runs"
+            runs.mkdir(parents=True, exist_ok=True)
+            run_dir = Path(tempfile.mkdtemp(prefix="structured-", dir=runs))
+        print(f"Run evidence: {run_dir}", file=sys.stderr)
         try:
-            completed = subprocess.run(
-                command, cwd=cwd, text=True, capture_output=True, check=False
-            )
+            completed = subprocess.run(command, cwd=cwd, capture_output=True, check=False)
         except OSError as exc:
+            (run_dir / "execution.json").write_text(json.dumps({
+                "status": "spawn-error", "error": str(exc), "errno": exc.errno
+            }), encoding="utf-8")
             raise ValidationError(f"cannot execute Claude CLI: {exc}") from exc
+        (run_dir / "stdout.json").write_bytes(completed.stdout)
+        (run_dir / "stderr.txt").write_bytes(completed.stderr)
+        metadata = {"exit_status": completed.returncode, "source": "CLI envelope",
+                    "expected_model": args.expected_model, "observed_models": [],
+                    "model_check": "unverified"}
+        metadata_path = run_dir / "execution.json"
+        metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         if completed.stderr:
-            print(completed.stderr, file=sys.stderr, end="")
+            print(completed.stderr.decode("utf-8", errors="replace"), file=sys.stderr, end="")
         if completed.returncode:
             return completed.returncode
-        payload = extract_structured_output(completed.stdout, schema)
+        try:
+            stdout = completed.stdout.decode("utf-8")
+            payload = extract_structured_output(stdout, schema)
+            envelope = json.loads(stdout, object_pairs_hook=unique_json_object)
+            if envelope.get("is_error") is True:
+                raise ValidationError("Claude CLI envelope reports is_error")
+            usage = envelope.get("modelUsage", {})
+            if not isinstance(usage, dict):
+                raise ValidationError("modelUsage must be an object")
+            models = set(usage)
+            if "model" in envelope:
+                if not isinstance(envelope["model"], str) or not envelope["model"]:
+                    raise ValidationError("model must be a nonempty string")
+                models.add(envelope["model"])
+            metadata.update({"observed_models": sorted(models),
+                             "session_id": envelope.get("session_id"),
+                             "usage": envelope.get("usage"), "modelUsage": usage})
+            if args.expected_model:
+                metadata["model_check"] = "matched" if models == {args.expected_model} else "rejected"
+                if metadata["model_check"] == "rejected":
+                    raise ValidationError("envelope model identity missing or different; possible fallback")
+        except (ValidationError, UnicodeError) as exc:
+            metadata["validation_error"] = str(exc)
+            raise ValidationError(str(exc)) from exc
+        finally:
+            metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        (run_dir / "agent-return.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
         print(json.dumps(payload, indent=2, ensure_ascii=False))
         return 0
     except (OSError, ValidationError) as exc:

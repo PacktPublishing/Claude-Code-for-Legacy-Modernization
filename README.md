@@ -10,6 +10,10 @@ All records and identities are synthetic. Do not introduce production data, cred
 
 The [v11 publisher delivery](https://github.com/PacktPublishing/Claude-Code-for-Legacy-Modernization-book-development/tree/main/delivery/2026-10-23-v11) accompanies a bounded validator update on `main`: `minLength` counts Unicode code points, and `format: date-time` checks a documented RFC 3339 profile with mandatory offsets, years 0001–9999, and no leap seconds. Unsupported keywords and formats still fail closed. The starter tags and intentional rounding gap remain unchanged; the tagged test counts below describe those earlier states.
 
+## v12 revised manuscript
+
+The v12 manuscript addresses Bianca's and Iago's reviews. This code revision brings in duplicate-member rejection, stricter required-label checks, structured-task evidence retention and the separate Appendix B and C examples in [`book-assets/appendices/`](book-assets/appendices/README.md). Existing starter tags, the intentional rounding mismatch and publisher licensing are unchanged.
+
 ## Start here
 
 Clone the published starting state onto a branch you own. The immutable `lab/00-start-v3` tag is the recommended hardened reference point; do not move or rewrite it.

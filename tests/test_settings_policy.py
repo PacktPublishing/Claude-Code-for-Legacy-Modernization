@@ -32,7 +32,8 @@ class SettingsPolicyTests(unittest.TestCase):
             self.assertIn(f"Edit({tree})", deny)
             self.assertNotIn(f"Write({tree})", deny)
         deny_write = set(self.settings["sandbox"]["filesystem"]["denyWrite"])
-        self.assertEqual({"./legacy_app/", "./fixtures/golden-master/"}, deny_write)
+        self.assertEqual({"./legacy_app/", "./fixtures/golden-master/",
+                          "./docs/decisions/0001-rounding-mismatch.md"}, deny_write)
         self.assertTrue(all(path.startswith("./") for path in deny_write))
 
     def test_write_is_covered_by_direct_file_hook(self):

@@ -11,7 +11,8 @@ import os
 import sys
 from pathlib import Path
 
-PROTECTED_RELATIVE = (Path("legacy_app"), Path("fixtures/golden-master"))
+PROTECTED_RELATIVE = (Path("legacy_app"), Path("fixtures/golden-master"),
+                      Path("docs/decisions/0001-rounding-mismatch.md"))
 
 
 def project_root() -> Path:
@@ -58,16 +59,16 @@ def fail_closed(reason: str) -> None:
 def main() -> int:
     try:
         event = json.load(sys.stdin)
+        if not isinstance(event, dict):
+            raise ValueError("event must be an object")
         root = project_root()
-    except (json.JSONDecodeError, OSError, TypeError, ValueError) as exc:
+    except (json.JSONDecodeError, OSError, TypeError, ValueError, RuntimeError) as exc:
         print(f"invalid hook input: {exc}", file=sys.stderr)
         return 2
 
-    if not isinstance(event, dict):
-        print("invalid hook input: event must be an object", file=sys.stderr)
-        return 2
-
-    tool_name = str(event.get("tool_name", ""))
+    tool_name = event.get("tool_name")
+    if not isinstance(tool_name, str) or not tool_name:
+        fail_closed("tool_name must be a nonempty string")
     tool_input = event.get("tool_input", {})
     if not isinstance(tool_input, dict):
         print("invalid hook input: tool_input must be an object", file=sys.stderr)
@@ -78,7 +79,10 @@ def main() -> int:
         raw_path = tool_input.get("file_path", "")
         if not isinstance(raw_path, str) or not raw_path.strip():
             fail_closed("matched direct-file event has no valid file_path")
-        marker = protected_marker(root, raw_path)
+        try:
+            marker = protected_marker(root, raw_path)
+        except (OSError, TypeError, ValueError, RuntimeError) as exc:
+            fail_closed(f"invalid target path: {exc}")
     if marker:
         deny(marker)
     return 0

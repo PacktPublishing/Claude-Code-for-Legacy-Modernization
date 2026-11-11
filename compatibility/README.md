@@ -33,7 +33,9 @@ Offline validation supports this explicit JSON Schema subset:
 - `$schema` and `$id` metadata;
 - `type`, `const`, `enum`, and `pattern`;
 - `properties`, `required`, and Boolean `additionalProperties`;
-- `items` and `minItems`.
+- `items`, `minItems` and `maxItems`;
+- `minimum` and `minLength`;
+- `format` for `date` and the bounded `date-time` profile documented in `scripts/validate_artifacts.py`.
 
 Unsupported keywords fail closed. This prevents a schema from appearing validated when an assertion was silently ignored. YAML artifacts can be checked without a dependency only when serialized as the JSON-compatible YAML 1.2 subset; broader YAML is rejected rather than partially parsed.
 

@@ -32,11 +32,11 @@ class StringKeywordTests(unittest.TestCase):
                     validate(value, {"format": "date-time"})
 
     def test_unknown_formats_and_keywords_fail_closed_even_unused(self):
-        for value in ["date", "email", "DATE-TIME", "", None, True, [], {}]:
+        for value in ["duration", "email", "DATE-TIME", "", None, True, [], {}]:
             with self.subTest(value=value):
                 with self.assertRaisesRegex(ValidationError, "unsupported format"):
                     validate({}, {"properties": {"absent": {"format": value}}})
-        for schema in [{"maxLength": 10}, {"items": {"minimum": 0}}, {"properties": {"absent": {"unknown": True}}}]:
+        for schema in [{"maxLength": 10}, {"items": {"exclusiveMinimum": 0}}, {"properties": {"absent": {"unknown": True}}}]:
             with self.assertRaisesRegex(ValidationError, "unsupported schema keywords"):
                 validate(None, schema)
 
@@ -67,10 +67,10 @@ class StringKeywordTests(unittest.TestCase):
             for revision, stamp, expected in [("abcdefg", "2026-01-01T00:00:00Z", 0), ("short", "2026-01-01T00:00:00Z", 1), ("abcdefg", "2026-02-30T00:00:00Z", 1)]:
                 payload = {"revision": revision, "captured_at": stamp}
                 responses = [CompletedProcess([], 0, "2.1.170", ""),
-                             CompletedProcess([], 0, json.dumps({"structured_output": payload}), "")]
+                             CompletedProcess([], 0, json.dumps({"structured_output": payload}).encode(), b"")]
                 out, err = io.StringIO(), io.StringIO()
                 with patch.object(claude_compat.subprocess, "run", side_effect=responses) as run, contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-                    status = claude_compat.main(["structured-task", "--claude", "offline-never-executed", "--cwd", str(root), "--prompt", str(prompt), "--schema", str(schema_path)])
+                    status = claude_compat.main(["structured-task", "--claude", "offline-never-executed", "--cwd", str(root), "--prompt", str(prompt), "--schema", str(schema_path), "--run-dir", str(root / ("run-" + stamp.replace(":", "_") + revision))])
                 self.assertEqual(expected, status)
                 self.assertEqual(2, run.call_count)
                 self.assertIn(json.dumps(schema), run.call_args.args[0])
