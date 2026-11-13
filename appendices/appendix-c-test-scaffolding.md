@@ -728,7 +728,7 @@ No such Northstar run occurred. The example shows why more tests do not create i
 
 I keep modernisation test scaffolding small, inspectable, and less privileged than the systems it executes. Each normalizer and comparator rule has an owner, adversarial pair, revision, and retained raw input. Side effects are recorded and blocked at an outer boundary.
 
-I do not treat a generated test suite as evidence until the harness itself has passed rejection tests and a human has accepted the oracle. Agreement between old and new code is one fact, not proof that either implementation is correct or ready to receive authority.
+I do not treat a generated test suite as evidence until the harness itself has passed rejection tests and a human has accepted the oracle. Agreement between the old and new code is evidence of behavioural consistency. That agreement is one fact. It does not prove that either implementation is correct or ready to receive authority.
 
 ## Practice exercises
 

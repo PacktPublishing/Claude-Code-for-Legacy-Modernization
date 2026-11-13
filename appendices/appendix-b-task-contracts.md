@@ -671,7 +671,7 @@ The wrapper retains a failed exit. It does not treat nonzero status as permissio
 
 ## Validate syntax, then validate evidence
 
-Save the following listing as `tools/contracts/validate_task_return.py`. Beside it, install the supplied companion `scripts/validate_artifacts.py` unchanged (SHA-256 `49d0b72444b96147d9279859653e94ee44b43f94e37207d9fa83e05b825b1c8c`). The runnable counterpart and schema are in `book-assets/appendices/`. The wrapper below depends on that reviewed standard-library module; it does not download dependencies or resolve remote schemas. Validate only reviewed schemas from the admitted input set.
+Save the following listing as `tools/contracts/validate_task_return.py`. Beside it, install the supplied companion `scripts/validate_artifacts.py` unchanged (SHA-256 `c387eba9f455f0d756562f895dcec76bac9cbcfc9566dac0f81aa4b8bb7b6e3b`). The runnable counterpart and schema are in `book-assets/appendices/`. The wrapper below depends on that reviewed standard-library module; it does not download dependencies or resolve remote schemas. Validate only reviewed schemas from the admitted input set.
 
 ```python
 from __future__ import annotations
