@@ -2,7 +2,7 @@
 
 ## Local schema and vocabulary
 
-The enterprise utilities and return formats in this appendix are illustrative prerequisites, not installed Python lab utilities. The supplied lab schema is `contracts/returns/task-return.schema.json` with required fields `claims`, `changed_files`, `commands`, `artifact_paths`, `unknowns`, and `stop_reason`. Use the [shared decision and alias table](../../companion/northstar-modernization-lab/docs/runbooks/decision-rights.md): `approved` maps to `accepted` only with human approval; `not-executed` maps to `not-run`; missing required evidence is `missing`, not success. Behaviour labels, evidence labels and dispositions are separate dimensions.
+The enterprise utilities and return formats in this appendix are illustrative prerequisites, not installed Python lab utilities. The supplied lab schema is `contracts/returns/task-return.schema.json` with required fields `claims`, `changed_files`, `commands`, `artifact_paths`, `unknowns`, and `stop_reason`. Use the [shared decision and alias table](../docs/runbooks/decision-rights.md): `approved` maps to `accepted` only with human approval; `not-executed` maps to `not-run`; missing required evidence is `missing`, not success. Behaviour labels, evidence labels and dispositions are separate dimensions.
 
 > **Practical handbook use:** Chapters 3, 5 to 8, 14, and 17 to 24.
 >
@@ -671,7 +671,7 @@ The wrapper retains a failed exit. It does not treat nonzero status as permissio
 
 ## Validate syntax, then validate evidence
 
-Save the following listing as `tools/contracts/validate_task_return.py`. Beside it, install the supplied companion `scripts/validate_artifacts.py` unchanged (SHA-256 `49d0b72444b96147d9279859653e94ee44b43f94e37207d9fa83e05b825b1c8c`). The runnable counterpart and schema are in `practical-edition/examples/appendices/`. The wrapper below depends on that reviewed standard-library module; it does not download dependencies or resolve remote schemas. Validate only reviewed schemas from the admitted input set.
+Save the following listing as `tools/contracts/validate_task_return.py`. Beside it, install the supplied companion `scripts/validate_artifacts.py` unchanged (SHA-256 `49d0b72444b96147d9279859653e94ee44b43f94e37207d9fa83e05b825b1c8c`). The runnable counterpart and schema are in `book-assets/appendices/`. The wrapper below depends on that reviewed standard-library module; it does not download dependencies or resolve remote schemas. Validate only reviewed schemas from the admitted input set.
 
 ```python
 from __future__ import annotations

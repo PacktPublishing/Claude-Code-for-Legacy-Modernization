@@ -71,7 +71,7 @@ The earlier register combined compatibility targets with historical test claims 
 
 For every observed claim, supply an immutable revision, exact input and oracle digests, command, stdout/stderr and exit status, execution timestamp, environment and evidence locator. Record release review, fixture execution and specimen generation as separate events. An event without its original record is unverified; a new run cannot prove its historical date.
 
-The [compatibility manifest](../../companion/northstar-modernization-lab/compatibility/claude-code-2.1.170.json) describes the CLI target. Its existence alone is not a test receipt.
+The [compatibility manifest](../compatibility/claude-code-2.1.170.json) describes the CLI target. Its existence alone is not a test receipt.
 
 ## Distribution and documentation identity
 

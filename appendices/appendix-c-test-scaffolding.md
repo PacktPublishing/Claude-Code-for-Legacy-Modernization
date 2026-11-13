@@ -2,7 +2,7 @@
 
 ## Local schema and vocabulary
 
-The enterprise utilities and return formats in this appendix are illustrative prerequisites, not installed Python lab utilities. The supplied lab schema is `contracts/returns/task-return.schema.json` with required fields `claims`, `changed_files`, `commands`, `artifact_paths`, `unknowns`, and `stop_reason`. Use the [shared decision and alias table](../../companion/northstar-modernization-lab/docs/runbooks/decision-rights.md): `approved` maps to `accepted` only with human approval; `not-executed` maps to `not-run`; missing required evidence is `missing`, not success. Behaviour labels, evidence labels and dispositions are separate dimensions.
+The enterprise utilities and return formats in this appendix are illustrative prerequisites, not installed Python lab utilities. The supplied lab schema is `contracts/returns/task-return.schema.json` with required fields `claims`, `changed_files`, `commands`, `artifact_paths`, `unknowns`, and `stop_reason`. Use the [shared decision and alias table](../docs/runbooks/decision-rights.md): `approved` maps to `accepted` only with human approval; `not-executed` maps to `not-run`; missing required evidence is `missing`, not success. Behaviour labels, evidence labels and dispositions are separate dimensions.
 
 > **Practical handbook use:** Chapters 8 to 12 and 20 to 23.
 >
@@ -133,7 +133,7 @@ The environment field passed to `subprocess.run()` replaces the inherited enviro
 
 ## A small differential harness
 
-The following Python 3.11 program is runnable. It reads one JSON input, executes two approved command arrays in separate retained working directories, sends the same canonical input to each process on standard input, captures standard output and error, parses JSON output, normalises only named infrastructure fields, and writes a report plus raw stdout/stderr files, paths and hashes. Save this listing as `run_subject.py`; its runnable counterpart is in `practical-edition/examples/appendices/`.
+The following Python 3.11 program is runnable. It reads one JSON input, executes two approved command arrays in separate retained working directories, sends the same canonical input to each process on standard input, captures standard output and error, parses JSON output, normalises only named infrastructure fields, and writes a report plus raw stdout/stderr files, paths and hashes. Save this listing as `run_subject.py`; its runnable counterpart is in `book-assets/appendices/`.
 
 It does not provide operating-system sandboxing or network isolation. Run it only inside an outer environment that already lacks production credentials and routes. The caller supplies a new retained capture directory. No cleanup runs automatically. Directory separation is not a security boundary. Subjects must be bounded single processes that do not spawn descendants; process-tree containment, disk quotas and interruption recovery need an approved outer runner.
 
